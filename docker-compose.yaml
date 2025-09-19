@@ -1,0 +1,47 @@
+services:
+  # Service No.1
+  webvue:
+    image: web-vue3
+    container_name: web-vue3
+    # The `ports` line below is actually not important for reverse proxy
+    # as nginx config uses the "exposed" or "normal" port instead of the "mapped" port defined here.
+    # However, defining this will allow direct access to child - bypassing reverse proxy.
+    ports:
+      - "3001:80"  # This line basically allow `cms` to be accessed by localhost (reverse proxy path) or localhost:3001
+    networks:
+      - reverse-proxy
+
+  # Service No.2
+  webnuxt:
+    image: web-nuxt4
+    container_name: web-nuxt4
+    ports:
+      - "3002:3000"
+    networks:
+      - reverse-proxy-network
+
+  # This is our reverse proxy container.
+  # Its goal is to allow the services above to be accessed by the same "port"
+  http-server:
+    image: nginx:latest
+    ports:
+      - "80:80"  # This listen for HTTP
+      - "443:443" # This listen for SSL
+    volumes:
+      # Copy the nginx config from project to container
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      # Copy the necessary SSL certificate from project to container.
+      - ./mydomain.dev.pem:/etc/ssl/certs/mydomain.dev.pem
+      - ./mydomain.dev-key.pem:/etc/ssl/certs/mydomain.dev-key.pem
+    networks:
+      - reverse-proxy-network
+    depends_on:
+      - webvue
+      - webnuxt
+networks:
+  reverse-proxy-network:
+    # Uncomment the line below if network is already created
+#    external: true
+    # Otherwise, define the `name` key to tell docker to auto create the network.
+    # Keep in mind that this might throw if network is already created and have active connection from other sources
+    name: reverse-proxy-network
