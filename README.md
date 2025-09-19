@@ -9,3 +9,10 @@ to test cookie sharing between the two instance:
 - Web B is a nuxt3 project which by defaults expose port 3000.
 
 Both webs located in different location and build as container separately. As such, the `docker-compose.yaml` references existing image instead of running build script for each web project.
+
+
+### Running the project
+
+```bash
+docker compose up -d
+```
